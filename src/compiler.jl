@@ -2563,7 +2563,12 @@ function GPUCompiler.codegen(output::Symbol, job::CompilerJob{<:EnzymeTarget};
     )
     actualRetType = nothing
     for (mi, k) in meta.compiled
-        haskey(functions(mod), k.specfunc) || continue
+        if has_rule(mi.specTypes)
+            @warn "Rule support not yet implemented"
+            continue
+        elseif !haskey(functions(mod), k.specfunc)
+            continue
+        end
 
         llvmfn = functions(mod)[k.specfunc]
         if llvmfn == primalf
@@ -2576,7 +2581,6 @@ function GPUCompiler.codegen(output::Symbol, job::CompilerJob{<:EnzymeTarget};
 
         Base.isbindingresolved(jlmod, name) && isdefined(jlmod, name) || continue
         func = getfield(jlmod, name)
-
 
         sparam_vals = mi.specTypes.parameters[2:end] # mi.sparam_vals
 

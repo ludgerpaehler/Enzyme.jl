@@ -7,12 +7,17 @@ function get_job(@nospecialize(func), @nospecialize(A), @nospecialize(types);
     rt = A{rt}
 
     target = Compiler.EnzymeTarget()
-    params = Compiler.EnzymeCompilerParams(adjoint, split, rt, run_enzyme, dupClosure)
+    params = Compiler.EnzymeCompilerParams(adjoint, mode, rt, run_enzyme, dupClosure)
     job    = Compiler.CompilerJob(target, primal, params)
+    return job
+end
+
+function reflect(@nospecialize(func), @nospecialize(A), @nospecialize(types);
+                 optimize::Bool=true,  second_stage::Bool=true, kwargs...)
+    job = get_job(func, A, types; kwargs...)
 
     # Codegen the primal function and all its dependency in one module
     mod, meta = Compiler.codegen(:llvm, job, optimize=optimize, #= validate=false =#)
-
 
     if second_stage
         post_optimze!(mod, JIT.get_tm())
